@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZeroBug.Team — Request Router for Ideas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0f16;
+    --panel:#0f1620;
+    --panel-2:#131b26;
+    --line:#1e2a38;
+    --text:#c9d4e0;
+    --muted:#6b7c8f;
+    --accent:#2dd4bf;
+    --accent-2:#5eead4;
+    --amber:#f0b942;
+    --red:#ef6461;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --font-body:'Inter',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(45,212,191,.09), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(240,185,66,.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+    min-height:100vh;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+  ::selection{background:var(--accent);color:#04120f;}
+
+  /* ---- topbar ---- */
+  header.topbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,15,22,.82);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1080px;margin:0 auto;padding:14px 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    font-family:var(--font-mono);font-size:13px;
+  }
+  .logo{display:flex;align-items:center;gap:9px;font-weight:600;color:#eef3f7;letter-spacing:.3px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  nav{display:flex;gap:22px;color:var(--muted);}
+  nav a:hover{color:var(--accent-2);}
+  @media (max-width:640px){ nav{display:none;} }
+
+  /* ---- hero: terminal / router status panel ---- */
+  .hero{padding:64px 0 40px;}
+  .term{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 20px 60px -30px rgba(0,0,0,.7);
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 14px;border-bottom:1px solid var(--line);
+    background:var(--panel-2);
+    font-family:var(--font-mono);font-size:12px;color:var(--muted);
+  }
+  .term-bar span.tb-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .term-body{padding:26px 28px 30px;font-family:var(--font-mono);}
+  .prompt-line{color:var(--muted);font-size:13px;margin-bottom:18px;}
+  .prompt-line .cmd{color:var(--accent-2);}
+  h1.route-name{
+    font-family:var(--font-display);
+    font-size:clamp(32px,5.4vw,54px);
+    font-weight:700;color:#eef3f7;line-height:1.08;letter-spacing:-.5px;
+    margin-bottom:10px;
+  }
+  h1.route-name .grad{
+    background:linear-gradient(100deg,var(--accent),var(--amber));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .role-line{font-size:16px;color:var(--muted);margin-bottom:26px;max-width:560px;}
+  .status-row{
+    display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px;
+  }
+  .pill{
+    font-family:var(--font-mono);font-size:12px;
+    border:1px solid var(--line);border-radius:20px;
+    padding:6px 12px;color:var(--text);
+    display:flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,.02);
+  }
+  .pill .pdot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono);font-size:13px;font-weight:500;
+    padding:11px 18px;border-radius:7px;border:1px solid var(--line);
+    transition:all .15s ease;
+  }
+  .btn.primary{background:var(--accent);color:#04140f;border-color:var(--accent);}
+  .btn.primary:hover{background:var(--accent-2);}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent-2);}
+
+  /* ---- section shell ---- */
+  section{padding:56px 0;border-top:1px solid var(--line);}
+  .eyebrow{
+    font-family:var(--font-mono);font-size:12px;color:var(--accent);
+    letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:'//';color:var(--muted);}
+  h2{font-family:var(--font-display);font-size:clamp(24px,3.2vw,32px);color:#eef3f7;margin-bottom:8px;letter-spacing:-.3px;}
+  .section-sub{color:var(--muted);font-size:14.5px;max-width:600px;margin-bottom:32px;}
+
+  /* ---- tiers (stack / routing tiers) ---- */
+  .tiers{display:flex;flex-direction:column;gap:14px;}
+  .tier{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;
+  }
+  .tier-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .tier-label{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+  .tier-title{font-family:var(--font-display);font-size:17px;color:#eef3f7;font-weight:600;}
+  .tier-note{font-family:var(--font-mono);font-size:11px;color:var(--accent);border:1px solid rgba(45,212,191,.35);padding:3px 9px;border-radius:20px;}
+  .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+  .skill{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;
+  }
+  .skill-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .skill-name{font-size:13.5px;font-weight:500;color:var(--text);}
+  .skill-pct{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+  .bar{height:5px;background:#182230;border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:4px;}
+
+  /* ---- projects as request log ---- */
+  .log{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    font-family:var(--font-mono);font-size:12.5px;overflow:hidden;
+  }
+  .log-head{
+    display:grid;grid-template-columns:70px 1fr 110px 90px;
+    padding:12px 20px;background:var(--panel-2);color:var(--muted);
+    border-bottom:1px solid var(--line);letter-spacing:.5px;text-transform:uppercase;font-size:10.5px;
+  }
+  .log-row{
+    display:grid;grid-template-columns:70px 1fr 110px 90px;
+    padding:16px 20px;border-bottom:1px solid var(--line);align-items:center;
+    transition:background .15s;
+  }
+  .log-row:last-child{border-bottom:none;}
+  .log-row:hover{background:rgba(45,212,191,.04);}
+  .log-status{color:var(--accent);font-weight:600;}
+  .log-title{color:#eef3f7;font-family:var(--font-body);font-weight:600;font-size:14px;margin-bottom:4px;}
+  .log-desc{color:var(--muted);font-size:12px;font-family:var(--font-body);line-height:1.5;}
+  .log-tag{color:var(--amber);font-size:11px;}
+  .log-link{color:var(--accent-2);font-size:11.5px;}
+  .log-link:hover{text-decoration:underline;}
+  @media(max-width:700px){
+    .log-head{display:none;}
+    .log-row{grid-template-columns:1fr;gap:6px;}
+  }
+
+  /* ---- endpoints / contact ---- */
+  .endpoints{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .endpoint{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .endpoint .method{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);letter-spacing:1px;}
+  .endpoint .path{font-family:var(--font-mono);font-size:14px;color:#eef3f7;}
+  .endpoint .desc{font-size:12.5px;color:var(--muted);}
+
+  footer{
+    padding:30px 0 50px;text-align:center;
+    font-family:var(--font-mono);font-size:11.5px;color:var(--muted);
+  }
+  footer .grad{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="dot"></span> zerobug.team</div>
+    <nav>
+      <a href="#stack">stack</a>
+      <a href="#routes">routes</a>
+      <a href="#endpoints">connect</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="term">
+      <div class="term-bar">
+        <span class="tb-dot" style="background:#ef6461"></span>
+        <span class="tb-dot" style="background:#f0b942"></span>
+        <span class="tb-dot" style="background:#2dd4bf"></span>
+        <span style="margin-left:6px;">zerobug-router — status: online</span>
+      </div>
+      <div class="term-body">
+        <div class="prompt-line">$ <span class="cmd">whoami</span> --team</div>
+        <h1 class="route-name">ZeroBug<span class="grad">.Team</span></h1>
+        <p class="role-line">Satu endpoint, banyak jalur pengerjaan — dari kampus, freelance, sampai eksperimen IoT & ML. Routing setiap kebutuhan ke stack yang paling tepat: Web, Mobile, dan Embedded.</p>
+        <div class="status-row">
+          <div class="pill"><span class="pdot"></span> POLIJE — D4 Teknik Informatika</div>
+          <div class="pill"><span class="pdot"></span> Fullstack: Laravel · React Native · Flutter</div>
+          <div class="pill"><span class="pdot" style="background:var(--amber)"></span> Uptime: nerima joki & kolaborasi</div>
+        </div>
+        <div class="cta-row">
+          <a class="btn primary" href="https://github.com/zerobugteam-zekkk" target="_blank">→ github.com/zerobugteam-zekkk</a>
+          <a class="btn ghost" href="https://www.instagram.com/zerobug.team" target="_blank">instagram @zerobug.team</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="eyebrow">provider tiers</div>
+    <h2>Stack routing</h2>
+    <p class="section-sub">Kayak 9Router yang milih provider terbaik buat tiap request, tiap jenis proyek juga di-routing ke tools yang paling cocok — mulai dari yang paling sering dipakai sampai yang masih dieksplorasi.</p>
+
+    <div class="tiers">
+      <div class="tier">
+        <div class="tier-head">
+          <span class="tier-label">tier 1</span>
+          <span class="tier-title">Core — dipakai tiap hari</span>
+          <span class="tier-note">primary route</span>
+        </div>
+        <div class="skills-grid">
+          <div class="skill"><div class="skill-top"><span class="skill-name">Laravel / PHP</span><span class="skill-pct">92%</span></div><div class="bar"><div class="bar-fill" style="width:92%"></div></div></div>
+          <div class="skill"><div class="skill-top"><span class="skill-name">MySQL</span><span class="skill-pct">88%</span></div><div class="bar"><div class="bar-fill" style="width:88%"></div></div></div>
+          <div class="skill"><div class="skill-top"><span class="skill-name">REST API</span><span class="skill-pct">85%</span></div><div class="bar"><div class="bar-fill" style="width:85%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head">
+          <span class="tier-label">tier 2</span>
+          <span class="tier-title">Mobile — fallback route saat butuh cross-platform</span>
+          <span class="tier-note">stable</span>
+        </div>
+        <div class="skills-grid">
+          <div class="skill"><div class="skill-top"><span class="skill-name">React Native</span><span class="skill-pct">78%</span></div><div class="bar"><div class="bar-fill" style="width:78%"></div></div></div>
+          <div class="skill"><div class="skill-top"><span class="skill-name">Flutter</span><span class="skill-pct">75%</span></div><div class="bar"><div class="bar-fill" style="width:75%"></div></div></div>
+          <div class="skill"><div class="skill-top"><span class="skill-name">Java</span><span class="skill-pct">70%</span></div><div class="bar"><div class="bar-fill" style="width:70%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head">
+          <span class="tier-label">tier 3</span>
+          <span class="tier-title">Eksperimen — IoT & Machine Learning</span>
+          <span class="tier-note">growing</span>
+        </div>
+        <div class="skills-grid">
+          <div class="skill"><div class="skill-top"><span class="skill-name">IoT Systems</span><span class="skill-pct">65%</span></div><div class="bar"><div class="bar-fill" style="width:65%"></div></div></div>
+          <div class="skill"><div class="skill-top"><span class="skill-name">Machine Learning</span><span class="skill-pct">55%</span></div><div class="bar"><div class="bar-fill" style="width:55%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="routes">
+    <div class="eyebrow">request log</div>
+    <h2>Routed projects</h2>
+    <p class="section-sub">Riwayat proyek yang udah di-handle — dari sistem kampus, tugas akhir, sampai proyek IoT.</p>
+
+    <div class="log">
+      <div class="log-head">
+        <span>status</span><span>project</span><span>tag</span><span>link</span>
+      </div>
+
+      <div class="log-row">
+        <span class="log-status">200 OK</span>
+        <div>
+          <div class="log-title">Portofolio-ZeroBug.Team</div>
+          <div class="log-desc">Website portofolio resmi ZeroBug Team — showcase layanan Web, Mobile, dan IoT development.</div>
+        </div>
+        <span class="log-tag">HTML</span>
+        <a class="log-link" href="https://github.com/zerobugteam-zekkk/Portofolio-ZeroBug.Team" target="_blank">repo →</a>
+      </div>
+
+      <div class="log-row">
+        <span class="log-status">200 OK</span>
+        <div>
+          <div class="log-title">Smart Drop Point</div>
+          <div class="log-desc">Sistem loker paket pintar berbasis IoT, terhubung ke backend PHP untuk tracking dan akses otomatis.</div>
+        </div>
+        <span class="log-tag">PHP · IoT</span>
+        <a class="log-link" href="https://github.com/zerobugteam-zekkk/smart-drop-point" target="_blank">repo →</a>
+      </div>
+
+      <div class="log-row">
+        <span class="log-status">200 OK</span>
+        <div>
+          <div class="log-title">Bakorwil</div>
+          <div class="log-desc">Aplikasi berbasis Laravel Blade untuk kebutuhan sistem informasi instansi.</div>
+        </div>
+        <span class="log-tag">Blade</span>
+        <a class="log-link" href="https://github.com/zerobugteam-zekkk/bakorwil" target="_blank">repo →</a>
+      </div>
+
+      <div class="log-row">
+        <span class="log-status" style="color:var(--amber)">202 open</span>
+        <div>
+          <div class="log-title">Slot kosong berikutnya</div>
+          <div class="log-desc">Ada proyek, tugas akhir, atau kolaborasi joki? Kirim request lewat endpoint di bawah.</div>
+        </div>
+        <span class="log-tag">—</span>
+        <a class="log-link" href="#endpoints">connect →</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="endpoints">
+    <div class="eyebrow">connect</div>
+    <h2>Endpoints</h2>
+    <p class="section-sub">Cara paling cepat buat kontak atau ngintip aktivitas.</p>
+    <div class="endpoints">
+      <a class="endpoint" href="https://github.com/zerobugteam-zekkk" target="_blank">
+        <span class="method">GET</span>
+        <span class="path">/github</span>
+        <span class="desc">Repos, kontribusi, dan stats aktivitas coding.</span>
+      </a>
+      <a class="endpoint" href="https://www.instagram.com/zerobug.team" target="_blank">
+        <span class="method">GET</span>
+        <span class="path">/instagram</span>
+        <span class="desc">Update proyek dan behind-the-scenes tim.</span>
+      </a>
+      <div class="endpoint">
+        <span class="method">POST</span>
+        <span class="path">/collab</span>
+        <span class="desc">Kirim brief proyek — dibalas cepat kalau slot lagi kosong.</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">ZeroBug.Team © 2026 — <span class="grad">routed with care, fallback ready.</span></div>
+</footer>
+
+</body>
+</html>
